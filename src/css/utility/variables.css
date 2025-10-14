@@ -1,0 +1,13 @@
+:root {
+	/* sizes */
+	--block-max-width: 1400rem;
+
+	/* fonts */
+	--main-font: "Inter", sans-serif;
+	--title-fonts: "DIN Pro", sans-serif;
+
+	/*  colors */
+	--color-main: #d56a30;
+	--color-background: #30213f;
+	--color-text: #000;
+}
