@@ -1,21 +1,18 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons";
 
-const ITEM_NAME = {
+const _ITEM_NAME = {
 	POSITION: "_camera_position",
 	TARGET: "_controls_target",
 } as const;
 
 /**
- * Создает экземпляр OrbitControls для камеры.
- * позволяя камере сохранять свою позицию после перезагрузки страницы.
+ * Расширяет OrbitControls для сохранения позиции камеры и цели в sessionStorage.
  *
- * @param {THREE.Camera} camera - Камера Three.js для управления.
- * @param {THREE.WebGLRenderer} renderer - WebGL рендерер Three.js.
- * @returns {OrbitControls} Созданный экземпляр OrbitControls.
+ * @extends OrbitControls
  *
  * @example
- * const controls = createdDevOrbitControls(camera, renderer);
+ * const controls = new DevOrbitControls(camera, renderer.domElement);
  *
  * const timer = new Timer();
  * function animate(timestamp: number) {
@@ -25,29 +22,43 @@ const ITEM_NAME = {
  * }
  *
  * renderer.setAnimationLoop(animate);
- *
  */
-export const createdDevOrbitControls = (camera: THREE.Camera, renderer: THREE.WebGLRenderer): OrbitControls => {
-	const sessionPosition = sessionStorage.getItem(ITEM_NAME.POSITION);
+export class DevOrbitControls extends OrbitControls {
+	/**
+	 * Позиция камеры из sessionStorage.
+	 * @private
+	 * @type {string | null}
+	 */
+	private _sessionPosition = sessionStorage.getItem(_ITEM_NAME.POSITION);
 
-	if (sessionPosition) {
-		const pos = JSON.parse(sessionPosition) as THREE.Vector3;
-		camera.position.set(pos.x, pos.y, pos.z);
+	/**
+	 * Цель камеры из sessionStorage.
+	 * @private
+	 * @type {string | null}
+	 */
+	private _sessionTarget = sessionStorage.getItem(_ITEM_NAME.TARGET);
+
+	/**
+	 * @param {THREE.Camera} camera - Камера.
+	 * @param {HTMLElement} rendererDomElement - Дом элемент рендера.
+	 */
+	constructor(camera: THREE.Camera, rendererDomElement: HTMLElement) {
+		super(camera, rendererDomElement);
+
+		if (this._sessionPosition) {
+			const pos = JSON.parse(this._sessionPosition) as THREE.Vector3;
+			camera.position.set(pos.x, pos.y, pos.z);
+		}
+
+		this.target = new THREE.Vector3(0, 0, 0);
+		if (this._sessionTarget) {
+			const tar = JSON.parse(this._sessionTarget) as THREE.Vector3;
+			this.target = new THREE.Vector3(tar.x, tar.y, tar.z);
+		}
+
+		this.addEventListener("change", () => {
+			sessionStorage.setItem(_ITEM_NAME.POSITION, JSON.stringify(camera.position));
+			sessionStorage.setItem(_ITEM_NAME.TARGET, JSON.stringify(this.target));
+		});
 	}
-
-	const controls = new OrbitControls(camera, renderer.domElement);
-	controls.target = new THREE.Vector3(0);
-
-	const sessionTarget = sessionStorage.getItem(ITEM_NAME.TARGET);
-	if (sessionTarget) {
-		const tar = JSON.parse(sessionTarget) as THREE.Vector3;
-		controls.target = new THREE.Vector3(tar.x, tar.y, tar.z);
-	}
-
-	controls.addEventListener("change", () => {
-		sessionStorage.setItem(ITEM_NAME.POSITION, JSON.stringify(camera.position));
-		sessionStorage.setItem(ITEM_NAME.TARGET, JSON.stringify(controls.target));
-	});
-
-	return controls;
-};
+}

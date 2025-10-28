@@ -17,7 +17,7 @@ export var createdTree = (canvasWrapEl: HTMLDivElement, fov: number = 75, render
 	var scene = new THREE.Scene();
 
 	// camera
-	var camera = new THREE.PerspectiveCamera(fov, canvasWidth / canvasHeight, 0.1, 1000);
+	var camera = new THREE.PerspectiveCamera(fov, canvasWidth / canvasHeight, 0.1, 500);
 
 	// renderer
 	var renderer = new THREE.WebGLRenderer({
@@ -37,12 +37,6 @@ export var createdTree = (canvasWrapEl: HTMLDivElement, fov: number = 75, render
 		camera.aspect = canvasWidth / canvasHeight;
 		camera.updateProjectionMatrix();
 	});
-
-	if (window._rv_isDev) {
-		var gridHelper = new THREE.GridHelper(1000, 200);
-		var axesHelper = new THREE.AxesHelper(10);
-		scene.add(gridHelper, axesHelper);
-	}
 
 	return {
 		scene,
