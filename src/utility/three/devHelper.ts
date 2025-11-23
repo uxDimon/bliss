@@ -17,10 +17,12 @@ export class DevHelpers {
 	 * Добавляет сетку и оси в сцену.
 	 */
 	public axes() {
-		const gridHelper = new THREE.GridHelper(1000, 200);
+		const gridColor = new THREE.Color(0x626262);
+		const gridHelper = new THREE.GridHelper(200, 20, gridColor, gridColor);
 		gridHelper.name = "_dev_GridHelper";
 		const axesHelper = new THREE.AxesHelper(10);
 		axesHelper.name = "_dev_AxesHelper";
+		axesHelper.position.y = 0.01;
 		this._scene.add(gridHelper, axesHelper);
 	}
 

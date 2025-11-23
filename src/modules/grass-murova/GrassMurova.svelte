@@ -7,9 +7,12 @@
 	import { DevHelpers } from "@/utility/three/devHelper";
 	import { HDRLoader, RoomEnvironment } from "three/examples/jsm/Addons.js";
 
+	import Stats from "stats.js";
+
 	import vertexShader from "./shaders/grass-vertex.glsl";
 	import fragmentShader from "./shaders/grass-fragment.glsl";
 	import GrassChunk from "@/modules/grass-murova/components/grass-chunk";
+	import { DevSphereHelper } from "@/utility/three/devSphereHelper";
 
 	let canvasWrapEl = $state<HTMLElementTagNameMap["div"]>();
 
@@ -45,6 +48,12 @@
 
 	onMount(() => {
 		if (canvasWrapEl) {
+			var stats = new Stats();
+			canvasWrapEl.appendChild(stats.dom);
+			stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+			stats.dom.style.transform = "scale(2.5)";
+			stats.dom.style.transformOrigin = "top left";
+
 			const { scene, camera, renderer } = createdTree(canvasWrapEl, 80);
 
 			// const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -53,19 +62,18 @@
 			// environment.dispose();
 			// scene.environment = envMap;
 
-			const pmremGenerator = new THREE.PMREMGenerator(renderer);
-			pmremGenerator.compileEquirectangularShader();
-			new HDRLoader().load(new URL("./assets/lilienstein_1k.hdr", import.meta.url).href, (texture) => {
-				const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-				scene.background = envMap;
-				scene.environment = envMap;
-				texture.dispose();
-				pmremGenerator.dispose();
-			});
-			renderer.toneMapping = THREE.ACESFilmicToneMapping;
-			renderer.toneMappingExposure = 1; // Настройте экспозицию по необходимости
+			// const pmremGenerator = new THREE.PMREMGenerator(renderer);
+			// pmremGenerator.compileEquirectangularShader();
+			// new HDRLoader().load(new URL("./assets/lilienstein_1k.hdr", import.meta.url).href, (texture) => {
+			// 	const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+			// 	scene.background = envMap;
+			// 	scene.environment = envMap;
+			// 	texture.dispose();
+			// 	pmremGenerator.dispose();
+			// });
+			// renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-			scene.background = new THREE.Color(0x90c6d8);
+			scene.background = new THREE.Color(0x283539);
 			camera.position.z = 5;
 
 			// renderer.shadowMap.enabled = true;
@@ -127,52 +135,6 @@
 				shader.vertexShader = newVertexShader.replace("#include <begin_vertex>", vertexShader);
 			};
 
-			const bladeGrassCount = 360;
-			const grassGeometry = new THREE.PlaneGeometry(2.1, 3, 1, 3);
-			const instancedGrass = new THREE.InstancedMesh(grassGeometry, grassMaterial, bladeGrassCount);
-
-			const color = new THREE.Color();
-
-			const randoms = new Float32Array(bladeGrassCount);
-			const positionHelper = new THREE.Object3D();
-			const squareSize = 50;
-			for (let index = 0; index < bladeGrassCount; index++) {
-				randoms[index] = THREE.MathUtils.randFloat(0.0, 1.2);
-				const scaleHeight = THREE.MathUtils.randFloat(0.4, 1.2);
-
-				positionHelper.position.set(
-					THREE.MathUtils.randFloat(-squareSize, squareSize),
-					(grassGeometry.parameters.height / 2) * scaleHeight,
-					THREE.MathUtils.randFloat(-squareSize, squareSize),
-				);
-				positionHelper.rotation.y = THREE.MathUtils.randFloat(0, Math.PI * 2);
-				positionHelper.scale.set(1, scaleHeight, 1);
-
-				positionHelper.updateMatrix();
-				instancedGrass.setMatrixAt(index, positionHelper.matrix);
-
-				// color.setHSL(
-				// 	(360 / 100000) * THREE.MathUtils.randInt(64, 94),
-				// 	THREE.MathUtils.randFloat(0.6, 0.9),
-				// 	THREE.MathUtils.randFloat(0.3, 0.5),
-				// );
-				// color.setHSL(0, 0, THREE.MathUtils.randFloat(0.1, 1));
-				// instancedGrass.setColorAt(index, color);
-			}
-
-			grassGeometry.setAttribute("random", new THREE.InstancedBufferAttribute(randoms, 1));
-			instancedGrass.instanceMatrix.needsUpdate = true;
-			// scene.add(instancedGrass);
-
-			positionHelper.position.set(0, 0, 0);
-			positionHelper.rotation.set(0, 0, 0);
-			positionHelper.scale.set(1, 1, 1);
-			instancedGrass.getMatrixAt(10, positionHelper.matrix);
-			positionHelper.matrix.decompose(positionHelper.position, positionHelper.quaternion, positionHelper.scale);
-			// console.log(positionHelper);
-
-			instancedGrass.position.x = 10;
-
 			// light
 			const aLight = new THREE.AmbientLight(0xffffff, 0.3);
 			scene.add(aLight);
@@ -186,36 +148,72 @@
 			// scene.add(dLightH);
 
 			// GrassChunk
+			const wireframe = true;
 			const chunk = new GrassChunk({
 				chunkPosition: new THREE.Vector3(0, 0, 0),
 				chunkSize: new THREE.Vector2(50, 50),
-				bladeGrassCount: 1000,
+				bladeGrassCount: 200,
 				lod: [
 					{
-						distance: 10,
-						geometry: new THREE.PlaneGeometry(2, 3, 1, 3),
-						material: new THREE.MeshBasicMaterial({ color: 0x0091ff, side: THREE.DoubleSide }),
+						distance: 0,
+						geometry: new THREE.PlaneGeometry(1, 5, 1, 4),
+						material: new THREE.MeshBasicMaterial({
+							color: 0xff6464,
+							side: THREE.DoubleSide,
+							wireframe,
+							// depthTest: false,
+						}),
 					},
 					{
-						distance: 30,
-						geometry: new THREE.SphereGeometry(2, 5, 5),
-						material: new THREE.MeshBasicMaterial({ color: 0xffee00, side: THREE.DoubleSide }),
+						distance: 25,
+						geometry: new THREE.PlaneGeometry(1, 5, 1, 2),
+						material: new THREE.MeshBasicMaterial({
+							color: 0xfff23c,
+							side: THREE.DoubleSide,
+							wireframe,
+							// depthTest: false,
+						}),
 					},
 					{
 						distance: 50,
-						geometry: new THREE.BoxGeometry(2, 2, 2),
-						material: new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide }),
+						geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
+						material: new THREE.MeshBasicMaterial({
+							color: 0x67ff97,
+							side: THREE.DoubleSide,
+							wireframe,
+							// depthTest: false,
+						}),
 					},
 				],
 			});
 
+			const boxHelper = new THREE.Box3Helper(chunk.chunkBox, 0x00d5ff);
+			scene.add(boxHelper);
+
+			const radius = 20;
+			const cameraSphere = new THREE.Sphere(camera.position, radius);
+			// const sphereHelper = new DevSphereHelper(radius, 0xffb3b3);
+			// sphereHelper.position.copy(camera.position);
+			// scene.add(sphereHelper);
+
 			scene.add(...chunk.lodInstancedMeshes);
 
-			if (devOrbitControls) devOrbitControls.addEventListener("change", () => chunk.updateLOD(camera.position));
+			if (devOrbitControls) {
+				devOrbitControls.addEventListener("change", () => {
+					cameraSphere.center.copy(camera.position);
+
+					chunk.updateLOD(camera.position);
+
+					// const isInside = chunk.chunkBox.intersectsSphere(cameraSphere);
+				});
+				chunk.firstUpdateLOD();
+			}
 
 			// setAnimationLoop
 			const timer = new Timer();
 			function animate(timestamp: number) {
+				stats.begin();
+
 				timer.update(timestamp);
 
 				// chunk.updateLOD(camera.position);
@@ -235,6 +233,8 @@
 				}
 
 				renderer.render(scene, camera);
+
+				stats.end();
 			}
 
 			renderer.setAnimationLoop(animate);

@@ -56,6 +56,8 @@ export class DevOrbitControls extends OrbitControls {
 			this.target = new THREE.Vector3(tar.x, tar.y, tar.z);
 		}
 
+		// camera.position.set(77, 65, 77);
+
 		this.addEventListener("change", () => {
 			sessionStorage.setItem(_ITEM_NAME.POSITION, JSON.stringify(camera.position));
 			sessionStorage.setItem(_ITEM_NAME.TARGET, JSON.stringify(this.target));
