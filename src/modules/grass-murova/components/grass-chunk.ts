@@ -3,7 +3,8 @@ import * as THREE from "three";
 const FLAT_MATRIX_4_SIZE = 16;
 const FLAT_VECTOR_3_LENGTH = 3;
 
-interface GrassChunkParams {
+export interface GrassChunkParams {
+	groupPosition?: THREE.Vector3;
 	chunkPosition: THREE.Vector3;
 	chunkSize: THREE.Vector2;
 
@@ -15,8 +16,9 @@ interface GrassChunkParams {
 	}[];
 }
 
-export default class GrassChunk {
-	private readonly _chunkPosition: GrassChunkParams["chunkPosition"];
+export class GrassChunk {
+	private readonly _chunkPosition: THREE.Vector3;
+	private readonly _groupPosition: THREE.Vector3;
 	private readonly _chunkSize: GrassChunkParams["chunkSize"];
 
 	private readonly _objectHelper = new THREE.Object3D();
@@ -25,7 +27,7 @@ export default class GrassChunk {
 	private _lodInstancedMeshes: THREE.InstancedMesh[];
 
 	private _instanceMatrix: Float32Array<ArrayBuffer>;
-	private _instancePosition: Float32Array<ArrayBuffer>;
+	private _instanceWorldPosition: Float32Array<ArrayBuffer>;
 	private _oldActiveLodLevel: Uint8Array<ArrayBuffer>;
 	private _newActiveLodLevel: Uint8Array<ArrayBuffer>;
 	private _lodDistance: number[];
@@ -34,21 +36,23 @@ export default class GrassChunk {
 
 	constructor(prams: GrassChunkParams) {
 		this._chunkPosition = prams.chunkPosition;
+		this._groupPosition = prams.groupPosition ?? new THREE.Vector3();
 		this._chunkSize = prams.chunkSize;
 		this._bladeGrassCount = prams.bladeGrassCount ?? 1000;
 		const { matrixArray, positionArray } = this._createInstancedArray();
 		this._instanceMatrix = matrixArray;
-		this._instancePosition = positionArray;
+		this._instanceWorldPosition = positionArray;
 		this._oldActiveLodLevel = new Uint8Array(this._bladeGrassCount);
 		this._newActiveLodLevel = new Uint8Array(this._bladeGrassCount);
 		this._lodDistance = prams.lod.map((item) => item.distance);
 		this._lodInstancedMeshes = this._createdInstancedMeshes(prams.lod);
+		this._updateWorldPosition();
 	}
 
 	// chunkBox
 	public get chunkBox() {
 		if (this._chunkBox.isEmpty()) {
-			this._chunkBox.setFromBufferAttribute(new THREE.BufferAttribute(this._instancePosition, 3));
+			this._chunkBox.setFromBufferAttribute(new THREE.BufferAttribute(this._instanceWorldPosition, 3));
 		}
 
 		return this._chunkBox;
@@ -56,7 +60,7 @@ export default class GrassChunk {
 
 	// instanced
 	private _createInstancedArray() {
-		const size = this._chunkSize.clone();
+		const size = this._chunkSize.clone().divideScalar(2);
 		const matrixArray = new Float32Array(this._bladeGrassCount * FLAT_MATRIX_4_SIZE);
 		const positionArray = new Float32Array(this._bladeGrassCount * FLAT_VECTOR_3_LENGTH);
 
@@ -100,9 +104,9 @@ export default class GrassChunk {
 		for (let index = 0; index < this._bladeGrassCount; index++) {
 			const indexPositionArray = index * 3;
 
-			this._objectHelper.position.x = this._instancePosition[indexPositionArray] as number;
-			this._objectHelper.position.y = this._instancePosition[indexPositionArray + 1] as number;
-			this._objectHelper.position.z = this._instancePosition[indexPositionArray + 2] as number;
+			this._objectHelper.position.x = this._instanceWorldPosition[indexPositionArray] as number;
+			this._objectHelper.position.y = this._instanceWorldPosition[indexPositionArray + 1] as number;
+			this._objectHelper.position.z = this._instanceWorldPosition[indexPositionArray + 2] as number;
 
 			const distance = this._objectHelper.position.distanceTo(cameraPosition);
 			this._lodDistance.forEach((value, indexLOD) => {
@@ -147,5 +151,22 @@ export default class GrassChunk {
 
 			mesh.instanceMatrix.needsUpdate = true;
 		});
+	}
+
+	// position
+	private _updateWorldPosition() {
+		for (let index = 0; index < this._bladeGrassCount; index++) {
+			const indexPositionArray = index * FLAT_VECTOR_3_LENGTH;
+			// const indexMatrixArray = index * FLAT_MATRIX_4_SIZE;
+
+			this._objectHelper.position.x = this._instanceWorldPosition[indexPositionArray] as number;
+			this._objectHelper.position.y = this._instanceWorldPosition[indexPositionArray + 1] as number;
+			this._objectHelper.position.z = this._instanceWorldPosition[indexPositionArray + 2] as number;
+			this._objectHelper.position.add(this._chunkPosition.clone()).add(this._groupPosition.clone());
+			// this._objectHelper.updateMatrix();
+
+			this._instanceWorldPosition.set(this._objectHelper.position.toArray(), indexPositionArray);
+			// this._instanceWorldMatrix.set(this._objectHelper.matrix.elements, indexMatrixArray);
+		}
 	}
 }

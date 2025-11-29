@@ -11,8 +11,9 @@
 
 	import vertexShader from "./shaders/grass-vertex.glsl";
 	import fragmentShader from "./shaders/grass-fragment.glsl";
-	import GrassChunk from "@/modules/grass-murova/components/grass-chunk";
+	import { GrassChunk } from "@/modules/grass-murova/components/grass-chunk";
 	import { DevSphereHelper } from "@/utility/three/devSphereHelper";
+	import GrassGroup from "@/modules/grass-murova/components/grass-group";
 
 	let canvasWrapEl = $state<HTMLElementTagNameMap["div"]>();
 
@@ -149,19 +150,63 @@
 
 			// GrassChunk
 			const wireframe = true;
-			const chunk = new GrassChunk({
-				chunkPosition: new THREE.Vector3(0, 0, 0),
-				chunkSize: new THREE.Vector2(50, 50),
-				bladeGrassCount: 200,
-				lod: [
+			const side: THREE.Side = THREE.DoubleSide;
+			// const chunk = new GrassChunk({
+			// 	chunkPosition: new THREE.Vector3(0, 0, 0),
+			// 	chunkSize: new THREE.Vector2(50, 50),
+			// 	bladeGrassCount: 200,
+			// 	lod: [
+			// 		{
+			// 			distance: 0,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 4),
+			// 			material: new THREE.MeshBasicMaterial({
+			// 				color: 0xff6464,
+			// 				side,
+			// 				wireframe,
+			// 			}),
+			// 		},
+			// 		{
+			// 			distance: 25,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 2),
+			// 			material: new THREE.MeshBasicMaterial({
+			// 				color: 0xfff23c,
+			// 				side,
+			// 				wireframe,
+			// 			}),
+			// 		},
+			// 		{
+			// 			distance: 50,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
+			// 			material: new THREE.MeshBasicMaterial({
+			// 				color: 0x67ff97,
+			// 				side,
+			// 				wireframe,
+			// 			}),
+			// 		},
+			// 	],
+			// });
+
+			// const boxHelper = new THREE.Box3Helper(chunk.chunkBox, 0x00d5ff);
+			// scene.add(boxHelper);
+
+			const radius = 20;
+			const cameraSphere = new THREE.Sphere(camera.position, radius);
+
+			// scene.add(...chunk.lodInstancedMeshes);
+
+			const group = new GrassGroup({
+				groupPosition: new THREE.Vector3(50, 0, 0),
+				groupSize: new THREE.Vector2(100, 100),
+				groupGrid: new THREE.Vector2(2, 3),
+				chunkBladeGrassCount: 50,
+				chunkLod: [
 					{
 						distance: 0,
 						geometry: new THREE.PlaneGeometry(1, 5, 1, 4),
 						material: new THREE.MeshBasicMaterial({
 							color: 0xff6464,
-							side: THREE.DoubleSide,
+							side,
 							wireframe,
-							// depthTest: false,
 						}),
 					},
 					{
@@ -169,9 +214,8 @@
 						geometry: new THREE.PlaneGeometry(1, 5, 1, 2),
 						material: new THREE.MeshBasicMaterial({
 							color: 0xfff23c,
-							side: THREE.DoubleSide,
+							side,
 							wireframe,
-							// depthTest: false,
 						}),
 					},
 					{
@@ -179,34 +223,26 @@
 						geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
 						material: new THREE.MeshBasicMaterial({
 							color: 0x67ff97,
-							side: THREE.DoubleSide,
+							side,
 							wireframe,
-							// depthTest: false,
 						}),
 					},
 				],
 			});
 
-			const boxHelper = new THREE.Box3Helper(chunk.chunkBox, 0x00d5ff);
-			scene.add(boxHelper);
+			group.chunkList.forEach((chunk) => {
+				scene.add(new THREE.Box3Helper(chunk.chunkBox, 0x00d5ff));
+			});
 
-			const radius = 20;
-			const cameraSphere = new THREE.Sphere(camera.position, radius);
-			// const sphereHelper = new DevSphereHelper(radius, 0xffb3b3);
-			// sphereHelper.position.copy(camera.position);
-			// scene.add(sphereHelper);
-
-			scene.add(...chunk.lodInstancedMeshes);
+			scene.add(group.group);
 
 			if (devOrbitControls) {
 				devOrbitControls.addEventListener("change", () => {
-					cameraSphere.center.copy(camera.position);
-
-					chunk.updateLOD(camera.position);
-
+					// cameraSphere.center.copy(camera.position);
+					// chunk.updateLOD(camera.position);
 					// const isInside = chunk.chunkBox.intersectsSphere(cameraSphere);
 				});
-				chunk.firstUpdateLOD();
+				// chunk.firstUpdateLOD();
 			}
 
 			// setAnimationLoop

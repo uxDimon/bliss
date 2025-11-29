@@ -14,13 +14,14 @@ export class DevSphereHelper extends THREE.Group {
 		this._radius = radius;
 		this._color = new THREE.Color(color);
 
-		const vertices = [];
-
+		const vertices = new Array(this._segments * 3);
 		for (let i = 0; i <= this._segments; i++) {
-			const theta = (i / this._segments) * Math.PI * 2; // Угол от 0 до 2*PI
+			const theta = (i / this._segments) * Math.PI * 2;
 			const x = this._radius * Math.cos(theta);
 			const y = this._radius * Math.sin(theta);
-			vertices.push(x, y, 0); // Добавляем координаты X, Y, Z (лежит на плоскости XY)
+			vertices[i * 3] = x;
+			vertices[i * 3 + 1] = y;
+			vertices[i * 3 + 2] = 0;
 		}
 
 		this._geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
