@@ -1,14 +1,15 @@
+import { FLAT_MATRIX_4_LENGTH, FLAT_VECTOR_3_LENGTH } from "@/utility/three/constants";
 import * as THREE from "three";
 
-const FLAT_MATRIX_4_SIZE = 16;
-const FLAT_VECTOR_3_LENGTH = 3;
+const POSITION_IN_SPACE = 10000;
 
 export interface GrassChunkParams {
 	groupPosition?: THREE.Vector3;
 	chunkPosition: THREE.Vector3;
-	chunkSize: THREE.Vector2;
 
 	bladeGrassCount?: number;
+	positionArray: Float32Array<ArrayBuffer>;
+	matrixArray: Float32Array<ArrayBuffer>;
 	lod: {
 		geometry: THREE.InstancedMesh["geometry"];
 		material: THREE.InstancedMesh["material"];
@@ -19,7 +20,6 @@ export interface GrassChunkParams {
 export class GrassChunk {
 	private readonly _chunkPosition: THREE.Vector3;
 	private readonly _groupPosition: THREE.Vector3;
-	private readonly _chunkSize: GrassChunkParams["chunkSize"];
 
 	private readonly _objectHelper = new THREE.Object3D();
 	private readonly _matrixHelper = new THREE.Matrix4();
@@ -34,14 +34,14 @@ export class GrassChunk {
 
 	private _chunkBox: THREE.Box3 = new THREE.Box3();
 
+	private _isActiveChunk: boolean = true;
+
 	constructor(prams: GrassChunkParams) {
 		this._chunkPosition = prams.chunkPosition;
 		this._groupPosition = prams.groupPosition ?? new THREE.Vector3();
-		this._chunkSize = prams.chunkSize;
-		this._bladeGrassCount = prams.bladeGrassCount ?? 1000;
-		const { matrixArray, positionArray } = this._createInstancedArray();
-		this._instanceMatrix = matrixArray;
-		this._instanceWorldPosition = positionArray;
+		this._instanceMatrix = prams.matrixArray;
+		this._instanceWorldPosition = prams.positionArray;
+		this._bladeGrassCount = prams.matrixArray.length / FLAT_MATRIX_4_LENGTH;
 		this._oldActiveLodLevel = new Uint8Array(this._bladeGrassCount);
 		this._newActiveLodLevel = new Uint8Array(this._bladeGrassCount);
 		this._lodDistance = prams.lod.map((item) => item.distance);
@@ -56,32 +56,6 @@ export class GrassChunk {
 		}
 
 		return this._chunkBox;
-	}
-
-	// instanced
-	private _createInstancedArray() {
-		const size = this._chunkSize.clone().divideScalar(2);
-		const matrixArray = new Float32Array(this._bladeGrassCount * FLAT_MATRIX_4_SIZE);
-		const positionArray = new Float32Array(this._bladeGrassCount * FLAT_VECTOR_3_LENGTH);
-
-		for (let index = 0; index < this._bladeGrassCount; index++) {
-			this._objectHelper.position.set(
-				THREE.MathUtils.randFloat(-size.x, size.x),
-				THREE.MathUtils.randFloat(2.5, 5),
-				// 2.5,
-				THREE.MathUtils.randFloat(-size.y, size.y)
-			);
-
-			this._objectHelper.rotation.y = THREE.MathUtils.randFloat(0, Math.PI * 2);
-			// this._positionHelper.scale.set(1, 1, 1);
-
-			this._objectHelper.updateMatrix();
-
-			matrixArray.set(this._objectHelper.matrix.elements, index * FLAT_MATRIX_4_SIZE);
-			positionArray.set(this._objectHelper.position.toArray(), index * FLAT_VECTOR_3_LENGTH);
-		}
-
-		return { matrixArray, positionArray };
 	}
 
 	private _createdInstancedMeshes(lod: GrassChunkParams["lod"]) {
@@ -100,32 +74,46 @@ export class GrassChunk {
 	}
 
 	// update
-	public updateLOD(cameraPosition: THREE.Vector3) {
-		for (let index = 0; index < this._bladeGrassCount; index++) {
-			const indexPositionArray = index * 3;
+	public updateLOD(cameraPosition: THREE.Vector3, isActiveChunk: boolean = true) {
+		if (isActiveChunk) {
+			for (let index = 0; index < this._bladeGrassCount; index++) {
+				const indexPositionArray = index * 3;
 
-			this._objectHelper.position.x = this._instanceWorldPosition[indexPositionArray] as number;
-			this._objectHelper.position.y = this._instanceWorldPosition[indexPositionArray + 1] as number;
-			this._objectHelper.position.z = this._instanceWorldPosition[indexPositionArray + 2] as number;
+				this._objectHelper.position.x = this._instanceWorldPosition[indexPositionArray] as number;
+				this._objectHelper.position.y = this._instanceWorldPosition[indexPositionArray + 1] as number;
+				this._objectHelper.position.z = this._instanceWorldPosition[indexPositionArray + 2] as number;
 
-			const distance = this._objectHelper.position.distanceTo(cameraPosition);
-			this._lodDistance.forEach((value, indexLOD) => {
-				if (distance > value) this._newActiveLodLevel[index] = indexLOD;
-			});
+				const distance = this._objectHelper.position.distanceTo(cameraPosition);
+				this._lodDistance.forEach((value, indexLOD) => {
+					if (distance > value) this._newActiveLodLevel[index] = indexLOD;
+				});
+			}
+
+			this._updatingChangedPositions();
+		} else if ((!isActiveChunk && this._isActiveChunk) || (!isActiveChunk && this._isActiveChunk)) {
+			for (let index = 0; index < this._oldActiveLodLevel.length; index++) {
+				this._newActiveLodLevel[index] = this._lodInstancedMeshes.length - 1;
+			}
+
+			this._updatingChangedPositions();
 		}
 
+		this._isActiveChunk = isActiveChunk;
+	}
+
+	private _updatingChangedPositions() {
 		for (let index = 0; index < this._oldActiveLodLevel.length; index++) {
 			const addLodLevel = this._newActiveLodLevel[index] as number;
 			const removeLodLevel = this._oldActiveLodLevel[index] as number;
 
 			if (removeLodLevel != addLodLevel) {
-				this._matrixHelper.elements[13] = 10000;
+				this._matrixHelper.elements[13] = POSITION_IN_SPACE;
 				this._lodInstancedMeshes[removeLodLevel]?.setMatrixAt(index, this._matrixHelper);
 
 				this._matrixHelper.fromArray(
 					this._instanceMatrix.subarray(
-						index * FLAT_MATRIX_4_SIZE,
-						index * FLAT_MATRIX_4_SIZE + FLAT_MATRIX_4_SIZE
+						index * FLAT_MATRIX_4_LENGTH,
+						index * FLAT_MATRIX_4_LENGTH + FLAT_MATRIX_4_LENGTH
 					)
 				);
 				this._lodInstancedMeshes[addLodLevel]?.setMatrixAt(index, this._matrixHelper);
@@ -139,7 +127,7 @@ export class GrassChunk {
 	}
 
 	public firstUpdateLOD() {
-		this._matrixHelper.elements[13] = 10000;
+		this._matrixHelper.elements[13] = POSITION_IN_SPACE;
 
 		this._lodInstancedMeshes.forEach((mesh, indexMesh) => {
 			for (let index = 0; index < this._newActiveLodLevel.length; index++) {
