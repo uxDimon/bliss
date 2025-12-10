@@ -17,7 +17,7 @@ export var createdTree = (canvasWrapEl: HTMLDivElement, fov: number = 75, render
 	var scene = new THREE.Scene();
 
 	// camera
-	var camera = new THREE.PerspectiveCamera(fov, canvasWidth / canvasHeight, 0.1, 500);
+	var camera = new THREE.PerspectiveCamera(fov, canvasWidth / canvasHeight, 0.1, 2000);
 
 	// renderer
 	var renderer = new THREE.WebGLRenderer({

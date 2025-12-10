@@ -6,6 +6,11 @@ const _ITEM_NAME = {
 	TARGET: "_controls_target",
 } as const;
 
+type Static = {
+	position?: THREE.Vector3;
+	target?: THREE.Vector3;
+};
+
 /**
  * Расширяет OrbitControls для сохранения позиции камеры и цели в sessionStorage.
  *
@@ -42,21 +47,18 @@ export class DevOrbitControls extends OrbitControls {
 	 * @param {THREE.Camera} camera - Камера.
 	 * @param {HTMLElement} rendererDomElement - Дом элемент рендера.
 	 */
-	constructor(camera: THREE.Camera, rendererDomElement: HTMLElement) {
+	constructor(camera: THREE.Camera, rendererDomElement: HTMLElement, statics?: Static) {
 		super(camera, rendererDomElement);
 
 		if (this._sessionPosition) {
-			const pos = JSON.parse(this._sessionPosition) as THREE.Vector3;
+			const pos = statics?.position ?? (JSON.parse(this._sessionPosition) as THREE.Vector3);
 			camera.position.set(pos.x, pos.y, pos.z);
 		}
 
-		this.target = new THREE.Vector3(0, 0, 0);
 		if (this._sessionTarget) {
-			const tar = JSON.parse(this._sessionTarget) as THREE.Vector3;
-			this.target = new THREE.Vector3(tar.x, tar.y, tar.z);
+			const tar = statics?.target ?? (JSON.parse(this._sessionTarget) as THREE.Vector3);
+			this.target.set(tar.x, tar.y, tar.z);
 		}
-
-		// camera.position.set(77, 65, 77);
 
 		this.addEventListener("change", () => {
 			sessionStorage.setItem(_ITEM_NAME.POSITION, JSON.stringify(camera.position));

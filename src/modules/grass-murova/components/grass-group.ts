@@ -71,10 +71,12 @@ export default class GrassGroup {
 
 		for (let index = 0; index < bladeGrassCount; index++) {
 			objectHelper.position.set(
+				// index * 40 - 200,
 				THREE.MathUtils.randFloat(-size.x, size.x),
 				THREE.MathUtils.randFloat(2.5, 5),
 				// 2.5,
 				THREE.MathUtils.randFloat(-size.y, size.y)
+				// 0
 			);
 
 			objectHelper.rotation.y = THREE.MathUtils.randFloat(0, Math.PI * 2);
@@ -103,12 +105,6 @@ export default class GrassGroup {
 					isActiveChunk ? HELPER_COLOR.ACTIVE : HELPER_COLOR.INACTIVE
 				);
 			}
-		});
-	}
-
-	public firstUpdateLOD() {
-		this._chunkList.forEach((chunk) => {
-			chunk.firstUpdateLOD();
 		});
 	}
 

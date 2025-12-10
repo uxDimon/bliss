@@ -51,7 +51,7 @@
 		if (canvasWrapEl) {
 			var stats = new Stats();
 			canvasWrapEl.appendChild(stats.dom);
-			stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+			stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
 			stats.dom.style.transform = "scale(2.5)";
 			stats.dom.style.transformOrigin = "top left";
 
@@ -63,16 +63,16 @@
 			// environment.dispose();
 			// scene.environment = envMap;
 
-			// const pmremGenerator = new THREE.PMREMGenerator(renderer);
-			// pmremGenerator.compileEquirectangularShader();
-			// new HDRLoader().load(new URL("./assets/lilienstein_1k.hdr", import.meta.url).href, (texture) => {
-			// 	const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-			// 	scene.background = envMap;
-			// 	scene.environment = envMap;
-			// 	texture.dispose();
-			// 	pmremGenerator.dispose();
-			// });
-			// renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			const pmremGenerator = new THREE.PMREMGenerator(renderer);
+			pmremGenerator.compileEquirectangularShader();
+			new HDRLoader().load(new URL("./assets/lilienstein_1k.hdr", import.meta.url).href, (texture) => {
+				const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+				// scene.background = envMap;
+				scene.environment = envMap;
+				texture.dispose();
+				pmremGenerator.dispose();
+			});
+			renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
 			scene.background = new THREE.Color(0x283539);
 			camera.position.z = 5;
@@ -83,7 +83,12 @@
 			let devOrbitControls: DevOrbitControls | null = null;
 			let devHelper: DevHelpers | null = null;
 			if (window._rv_isDev) {
-				devOrbitControls = new DevOrbitControls(camera, renderer.domElement);
+				devOrbitControls = new DevOrbitControls(camera, renderer.domElement, {
+					// position: new THREE.Vector3(1130, 300, 1130),
+					// position: new THREE.Vector3(0, 30, 980),
+					// target: new THREE.Vector3(0, -260, 260),
+					// target: new THREE.Vector3(0, 0, 0),
+				});
 
 				devHelper = new DevHelpers(scene);
 				devHelper.axes();
@@ -94,34 +99,38 @@
 			}
 
 			// grass
-			const grassMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff,
-				emissive: 0xffffff,
-				emissiveMap: textures.diff,
-				emissiveIntensity: 0.2,
-				metalness: 0.8,
-				roughness: 0.4,
-				side: THREE.DoubleSide,
-				map: textures.diff,
-				metalnessMap: textures.rough,
-				aoMap: textures.ao,
-				aoMapIntensity: 1,
-				alphaMap: textures.alpha,
-				alphaTest: 0.8,
-				transparent: true,
-			});
+			// const grassMaterial = new THREE.MeshStandardMaterial({
+			// 	color: 0xffffff,
+			// 	emissive: 0xffffff,
+			// 	emissiveMap: textures.diff,
+			// 	emissiveIntensity: 0.2,
+			// 	metalness: 0.8,
+			// 	roughness: 0.4,
+			// 	side: THREE.DoubleSide,
+			// 	map: textures.diff,
+			// 	metalnessMap: textures.rough,
+			// 	aoMap: textures.ao,
+			// 	aoMapIntensity: 1,
+			// 	alphaMap: textures.alpha,
+			// 	alphaTest: 0.8,
+			// 	transparent: true,
+			// });
 
 			type CustomUniforms = {
 				[uniform: string]: THREE.IUniform<any>;
 			};
 			let customUniforms: CustomUniforms | null = null;
+			const grassMaterial = new THREE.MeshStandardMaterial({
+				color: 0x2caf22,
+				side: THREE.DoubleSide,
+			});
 			grassMaterial.onBeforeCompile = (shader) => {
 				customUniforms = shader.uniforms;
 
 				// Добавляем нашу кастомную униформу 'time'
 				customUniforms.time = { value: 0.0 };
 				customUniforms.windDirection = { value: new THREE.Vector3(1, 0, 0) };
-				customUniforms.windStrength = { value: 0.2 };
+				customUniforms.windStrength = { value: 0.4 };
 
 				// Добавляем атрибут `random` и `uniform` `time`
 				const newVertexShader = `
@@ -137,8 +146,8 @@
 			};
 
 			// light
-			const aLight = new THREE.AmbientLight(0xffffff, 0.3);
-			scene.add(aLight);
+			// const aLight = new THREE.AmbientLight(0xffffff, 1.1);
+			// scene.add(aLight);
 
 			// const dLight = new THREE.DirectionalLight(0xffffff, 1.3);
 			// dLight.position.set(10, 10, 15);
@@ -149,44 +158,124 @@
 			// scene.add(dLightH);
 
 			// GrassChunk
-			const wireframe = true;
+			const wireframe = false;
 			const side: THREE.Side = THREE.DoubleSide;
 
 			const group = new GrassGroup({
 				groupPosition: new THREE.Vector3(0, 0, 0),
-				groupSize: new THREE.Vector2(100, 100),
-				groupGrid: new THREE.Vector2(2, 3),
-				chunkBladeGrassCount: 20,
+				groupSize: new THREE.Vector2(2000, 2000),
+				groupGrid: new THREE.Vector2(3, 3),
+				chunkBladeGrassCount: 200,
 				chunkLod: [
 					{
 						distance: 0,
-						geometry: new THREE.PlaneGeometry(1, 5, 1, 4),
-						material: new THREE.MeshBasicMaterial({
+						geometry: new THREE.TorusKnotGeometry(10, 3, 120, 20),
+						material: new THREE.MeshStandardMaterial({
 							color: 0x3cffe2,
 							side,
 							wireframe,
 						}),
+						// material: grassMaterial,
 					},
 					{
-						distance: 25,
-						geometry: new THREE.PlaneGeometry(1, 5, 1, 2),
-						material: new THREE.MeshBasicMaterial({
+						distance: 80,
+						geometry: new THREE.TorusKnotGeometry(10, 3, 60, 12),
+						material: new THREE.MeshStandardMaterial({
 							color: 0x8398fe,
 							side,
 							wireframe,
 						}),
+						// material: grassMaterial,
 					},
 					{
-						distance: 50,
-						geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
-						material: new THREE.MeshBasicMaterial({
+						distance: 180,
+						geometry: new THREE.TorusKnotGeometry(10, 3, 20, 6),
+						material: new THREE.MeshStandardMaterial({
 							color: 0xff649a,
 							side,
 							wireframe,
 						}),
+						// material: grassMaterial,
+					},
+					{
+						distance: 310,
+						geometry: new THREE.TorusKnotGeometry(10, 3, 10, 4),
+						material: new THREE.MeshStandardMaterial({
+							color: 0xffb1b1,
+							side,
+							wireframe,
+						}),
+						// material: grassMaterial,
 					},
 				],
 			});
+			// const group = new GrassGroup({
+			// 	groupPosition: new THREE.Vector3(0, 0, 0),
+			// 	groupSize: new THREE.Vector2(200, 200),
+			// 	groupGrid: new THREE.Vector2(3, 3),
+			// 	chunkBladeGrassCount: 140,
+			// 	chunkLod: [
+			// 		{
+			// 			distance: 0,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 4),
+			// 			material: new THREE.MeshBasicMaterial({
+			// 				color: 0x3cffe2,
+			// 				side,
+			// 				wireframe,
+			// 			}),
+			// 		},
+			// 		{
+			// 			distance: 25,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 2),
+			// 			material: new THREE.MeshBasicMaterial({
+			// 				color: 0x8398fe,
+			// 				side,
+			// 				wireframe,
+			// 			}),
+			// 		},
+			// 		{
+			// 			distance: 50,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
+			// 			material: new THREE.MeshBasicMaterial({
+			// 				color: 0xff649a,
+			// 				side,
+			// 				wireframe,
+			// 			}),
+			// 		},
+			// 	],
+			// });
+
+			// const group = new GrassGroup({
+			// 	groupPosition: new THREE.Vector3(0, 0, 0),
+			// 	groupSize: new THREE.Vector2(2000, 2000),
+			// 	groupGrid: new THREE.Vector2(10, 10),
+			// 	chunkBladeGrassCount: 140,
+			// 	chunkLod: [
+			// 		{
+			// 			distance: 0,
+			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 3),
+			// 			material: grassMaterial,
+			// 		},
+			// 		// {
+			// 		// 	distance: 10,
+			// 		// 	geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
+			// 		// 	material: grassMaterial,
+			// 		// },
+			// 		// {
+			// 		// 	distance: 100,
+			// 		// 	geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
+			// 		// 	material: grassMaterial,
+			// 		// },
+			// 		// {
+			// 		// 	distance: 150,
+			// 		// 	geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
+			// 		// 	material: new THREE.MeshStandardMaterial({
+			// 		// 		color: 0x2caf22,
+			// 		// 		side: THREE.DoubleSide,
+			// 		// 	}),
+			// 		// },
+			// 	],
+			// });
 
 			scene.add(group.group);
 			scene.add(...group.box3Helpers);
@@ -195,8 +284,7 @@
 				devOrbitControls.addEventListener("change", () => {
 					group.updateLOD(camera.position);
 				});
-				group.updateLOD(camera.position);
-				group.firstUpdateLOD();
+				// group.updateLOD(camera.position);
 			}
 
 			// setAnimationLoop
@@ -217,7 +305,7 @@
 						.windDirection!.value.set(
 							Math.sin(timer.getElapsed() * 0.01),
 							0,
-							Math.cos(timer.getElapsed() * 0.01),
+							Math.cos(timer.getElapsed() * 0.1),
 						)
 						.normalize();
 				}
@@ -233,7 +321,7 @@
 </script>
 
 <div bind:this={canvasWrapEl} class="canvas-wrap">
-	<h2>grass-murova</h2>
+	<h2>bliss</h2>
 </div>
 
 <style>
