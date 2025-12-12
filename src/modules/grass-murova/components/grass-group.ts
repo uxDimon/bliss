@@ -73,7 +73,7 @@ export default class GrassGroup {
 			objectHelper.position.set(
 				// index * 40 - 200,
 				THREE.MathUtils.randFloat(-size.x, size.x),
-				THREE.MathUtils.randFloat(2.5, 5),
+				0,
 				// 2.5,
 				THREE.MathUtils.randFloat(-size.y, size.y)
 				// 0

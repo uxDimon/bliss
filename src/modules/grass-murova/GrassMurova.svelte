@@ -14,6 +14,8 @@
 	import { GrassChunk } from "@/modules/grass-murova/components/grass-chunk";
 	import { DevSphereHelper } from "@/utility/three/devSphereHelper";
 	import GrassGroup from "@/modules/grass-murova/components/grass-group";
+	import { GeometryMerger } from "@/utility/three/geometryMerger";
+	import { GrassLodGeometry } from "@/modules/grass-murova/components/grass-lod-geometry";
 
 	let canvasWrapEl = $state<HTMLElementTagNameMap["div"]>();
 
@@ -84,10 +86,8 @@
 			let devHelper: DevHelpers | null = null;
 			if (window._rv_isDev) {
 				devOrbitControls = new DevOrbitControls(camera, renderer.domElement, {
-					// position: new THREE.Vector3(1130, 300, 1130),
-					// position: new THREE.Vector3(0, 30, 980),
-					// target: new THREE.Vector3(0, -260, 260),
-					// target: new THREE.Vector3(0, 0, 0),
+					position: new THREE.Vector3(100, 12, 100),
+					target: new THREE.Vector3(0, 6, 0),
 				});
 
 				devHelper = new DevHelpers(scene);
@@ -121,7 +121,7 @@
 			};
 			let customUniforms: CustomUniforms | null = null;
 			const grassMaterial = new THREE.MeshStandardMaterial({
-				color: 0x2caf22,
+				color: 0x538836,
 				side: THREE.DoubleSide,
 			});
 			grassMaterial.onBeforeCompile = (shader) => {
@@ -161,121 +161,48 @@
 			const wireframe = false;
 			const side: THREE.Side = THREE.DoubleSide;
 
+			// const arcShape = new THREE.Shape();
+			// arcShape.moveTo(4, 0);
+			// arcShape.bezierCurveTo(5, 25, 5, 25, 0, 60);
+			// arcShape.bezierCurveTo(-5, 25, -5, 25, -4, 0);
+			// const geometry = new THREE.ShapeGeometry(arcShape, 2);
+			// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
+			// const mesh = new THREE.Mesh(geometry, material);
+			// scene.add(mesh);
+
+			const grassGeometry = new GrassLodGeometry({
+				size: new THREE.Vector2(4, 4),
+				bladeGrassCount: 40,
+			});
+
 			const group = new GrassGroup({
 				groupPosition: new THREE.Vector3(0, 0, 0),
-				groupSize: new THREE.Vector2(2000, 2000),
+				groupSize: new THREE.Vector2(200, 200),
 				groupGrid: new THREE.Vector2(3, 3),
-				chunkBladeGrassCount: 200,
+				chunkBladeGrassCount: 1000,
 				chunkLod: [
 					{
 						distance: 0,
-						geometry: new THREE.TorusKnotGeometry(10, 3, 120, 20),
-						material: new THREE.MeshStandardMaterial({
-							color: 0x3cffe2,
-							side,
-							wireframe,
-						}),
-						// material: grassMaterial,
+						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 6), 1),
+						material: grassMaterial,
 					},
 					{
-						distance: 80,
-						geometry: new THREE.TorusKnotGeometry(10, 3, 60, 12),
-						material: new THREE.MeshStandardMaterial({
-							color: 0x8398fe,
-							side,
-							wireframe,
-						}),
-						// material: grassMaterial,
+						distance: 15,
+						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 4), 1),
+						material: grassMaterial,
 					},
 					{
-						distance: 180,
-						geometry: new THREE.TorusKnotGeometry(10, 3, 20, 6),
-						material: new THREE.MeshStandardMaterial({
-							color: 0xff649a,
-							side,
-							wireframe,
-						}),
-						// material: grassMaterial,
+						distance: 25,
+						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 2), 2),
+						material: grassMaterial,
 					},
 					{
-						distance: 310,
-						geometry: new THREE.TorusKnotGeometry(10, 3, 10, 4),
-						material: new THREE.MeshStandardMaterial({
-							color: 0xffb1b1,
-							side,
-							wireframe,
-						}),
-						// material: grassMaterial,
+						distance: 35,
+						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 1), 4),
+						material: grassMaterial,
 					},
 				],
 			});
-			// const group = new GrassGroup({
-			// 	groupPosition: new THREE.Vector3(0, 0, 0),
-			// 	groupSize: new THREE.Vector2(200, 200),
-			// 	groupGrid: new THREE.Vector2(3, 3),
-			// 	chunkBladeGrassCount: 140,
-			// 	chunkLod: [
-			// 		{
-			// 			distance: 0,
-			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 4),
-			// 			material: new THREE.MeshBasicMaterial({
-			// 				color: 0x3cffe2,
-			// 				side,
-			// 				wireframe,
-			// 			}),
-			// 		},
-			// 		{
-			// 			distance: 25,
-			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 2),
-			// 			material: new THREE.MeshBasicMaterial({
-			// 				color: 0x8398fe,
-			// 				side,
-			// 				wireframe,
-			// 			}),
-			// 		},
-			// 		{
-			// 			distance: 50,
-			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
-			// 			material: new THREE.MeshBasicMaterial({
-			// 				color: 0xff649a,
-			// 				side,
-			// 				wireframe,
-			// 			}),
-			// 		},
-			// 	],
-			// });
-
-			// const group = new GrassGroup({
-			// 	groupPosition: new THREE.Vector3(0, 0, 0),
-			// 	groupSize: new THREE.Vector2(2000, 2000),
-			// 	groupGrid: new THREE.Vector2(10, 10),
-			// 	chunkBladeGrassCount: 140,
-			// 	chunkLod: [
-			// 		{
-			// 			distance: 0,
-			// 			geometry: new THREE.PlaneGeometry(1, 5, 1, 3),
-			// 			material: grassMaterial,
-			// 		},
-			// 		// {
-			// 		// 	distance: 10,
-			// 		// 	geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
-			// 		// 	material: grassMaterial,
-			// 		// },
-			// 		// {
-			// 		// 	distance: 100,
-			// 		// 	geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
-			// 		// 	material: grassMaterial,
-			// 		// },
-			// 		// {
-			// 		// 	distance: 150,
-			// 		// 	geometry: new THREE.PlaneGeometry(1, 5, 1, 1),
-			// 		// 	material: new THREE.MeshStandardMaterial({
-			// 		// 		color: 0x2caf22,
-			// 		// 		side: THREE.DoubleSide,
-			// 		// 	}),
-			// 		// },
-			// 	],
-			// });
 
 			scene.add(group.group);
 			scene.add(...group.box3Helpers);

@@ -1,13 +1,50 @@
 import * as THREE from "three";
 
+/**
+ * Класс DevSphereHelper расширяет THREE.Group для создания вспомогательного объекта в виде трех окружностей, имитирующих сферу для отладки.
+ * @extends THREE.Group
+ */
 export class DevSphereHelper extends THREE.Group {
+	/**
+	 * Количество сегментов для окружностей.
+	 * @private
+	 * @type {number}
+	 */
 	private _segments = 32;
+
+	/**
+	 * Радиус сферы.
+	 * @private
+	 * @type {number}
+	 */
 	private _radius: number;
+
+	/**
+	 * Цвет линий.
+	 * @private
+	 * @type {THREE.Color}
+	 */
 	private _color: THREE.Color;
 
+	/**
+	 * Геометрия для окружностей.
+	 * @private
+	 * @type {THREE.BufferGeometry}
+	 */
 	private _geometry = new THREE.BufferGeometry();
+
+	/**
+	 * Материал для линий.
+	 * @private
+	 * @type {THREE.LineBasicMaterial}
+	 */
 	private _material = new THREE.LineBasicMaterial();
 
+	/**
+	 * Конструктор создает три окружности в плоскостях XY, XZ и YZ.
+	 * @param {number} [radius=10] - Радиус сферы.
+	 * @param {THREE.ColorRepresentation} [color=0xff0000] - Цвет линий.
+	 */
 	constructor(radius: number = 10, color: THREE.ColorRepresentation = 0xff0000) {
 		super();
 

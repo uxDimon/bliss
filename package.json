@@ -11,20 +11,20 @@
 		"check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
 	},
 	"devDependencies": {
-		"@sveltejs/vite-plugin-svelte": "^6.2.0",
-		"@tsconfig/svelte": "^5.0.5",
-		"@types/node": "^24.5.2",
+		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@tsconfig/svelte": "^5.0.6",
+		"@types/node": "^25.0.0",
 		"@types/stats.js": "^0.17.4",
-		"@types/three": "^0.180.0",
-		"browserslist": "^4.26.2",
-		"lightningcss": "^1.30.1",
-		"oxlint": "^1.23.0",
-		"svelte": "^5.39.4",
-		"svelte-check": "^4.3.1",
-		"typescript": "~5.8.3",
-		"vite": "npm:rolldown-vite@7.1.12",
-		"vite-plugin-glsl": "^1.5.4",
-		"vite-plugin-oxlint": "^1.4.0"
+		"@types/three": "^0.182.0",
+		"browserslist": "^4.28.1",
+		"lightningcss": "^1.30.2",
+		"oxlint": "^1.32.0",
+		"svelte": "^5.45.8",
+		"svelte-check": "^4.3.4",
+		"typescript": "~5.9.3",
+		"vite": "npm:rolldown-vite@7.2.10",
+		"vite-plugin-glsl": "^1.5.5",
+		"vite-plugin-oxlint": "^1.5.0"
 	},
 	"pnpm": {
 		"overrides": {
@@ -33,6 +33,6 @@
 	},
 	"dependencies": {
 		"stats.js": "^0.17.0",
-		"three": "^0.180.0"
+		"three": "^0.182.0"
 	}
 }

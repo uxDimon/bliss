@@ -38,7 +38,7 @@ float sinTheta = instanceMatrix[0][2];
 vec3 normWindDir = normalize(windDirection);
 
 // Вычисляем амплитуды (основная по sin, вторая по cos для бокового движения)
-float sinAmplitude = (time * (windStrength * 15.0) + random + position.y) * 0.1;
+float sinAmplitude = (time * (windStrength * 8.5) + random + position.y) * 0.2;
 float mainAmplitude = sin(sinAmplitude) * windStrength;
 float sideAmplitude = cos(sinAmplitude) * (windStrength * 0.3);  // Меньшая сила для бокового (0.5 — коэффициент, настройте)
 

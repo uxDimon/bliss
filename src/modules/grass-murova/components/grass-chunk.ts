@@ -62,12 +62,23 @@ export class GrassChunk {
 	}
 
 	private _createdInstancedMeshes(lod: GrassChunkParams["lod"]) {
+		// const colors = [new THREE.Color(0x538836), new THREE.Color(0x618f38), new THREE.Color(0x378634)];
+
+		// function getRandomColor(arr: THREE.Color[]) {
+		// 	const randomIndex = Math.floor(Math.random() * arr.length);
+		// 	return arr[randomIndex]!;
+		// }
+
 		return lod.map((item) => {
 			const instancedGrass = new THREE.InstancedMesh(item.geometry, item.material, this._bladeGrassCount);
 			instancedGrass.instanceMatrix.array = this._instanceMatrix.slice();
 			instancedGrass.position.copy(this._chunkPosition);
 			instancedGrass.frustumCulled = false;
 			instancedGrass.name = `distance: ${item.distance}`;
+
+			// for (let index = 0; index < instancedGrass.count; index++) {
+			// 	instancedGrass.setColorAt(index, getRandomColor(colors));
+			// }
 
 			return instancedGrass;
 		});
