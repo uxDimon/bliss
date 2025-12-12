@@ -17,7 +17,7 @@ export class GrassLodGeometry {
 		const size = params.size.clone().divideScalar(2);
 
 		return Array.from({ length: params.bladeGrassCount }, () => {
-			const scaleY = THREE.MathUtils.randFloat(1, 2);
+			const scaleY = THREE.MathUtils.randFloat(1, 2.2);
 			return new THREE.Matrix4().compose(
 				new THREE.Vector3(
 					THREE.MathUtils.randFloat(-size.x, size.y),
