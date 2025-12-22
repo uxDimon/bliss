@@ -5,7 +5,7 @@
 	import { Timer } from "three";
 	import { DevOrbitControls } from "@/utility/three/devOrbitControls";
 	import { DevHelpers } from "@/utility/three/devHelper";
-	import { HDRLoader, RoomEnvironment } from "three/examples/jsm/Addons.js";
+	import { BufferGeometryUtils, HDRLoader, RoomEnvironment } from "three/examples/jsm/Addons.js";
 
 	import Stats from "stats.js";
 
@@ -16,6 +16,7 @@
 	import GrassGroup from "@/modules/grass-murova/components/grass-group";
 	import { GeometryMerger } from "@/utility/three/geometryMerger";
 	import { GrassLodGeometry } from "@/modules/grass-murova/components/grass-lod-geometry";
+	import { GrassGeometry } from "@/modules/grass-murova/components/grass-geometry";
 
 	let canvasWrapEl = $state<HTMLElementTagNameMap["div"]>();
 
@@ -91,7 +92,7 @@
 				});
 
 				devHelper = new DevHelpers(scene);
-				devHelper.axes();
+				// devHelper.axes();
 				// const devGround = devHelper.ground();
 				// devGround.material.color.setHex(0x808a58);
 				// devGround.material.map = null;
@@ -186,7 +187,7 @@
 				color: 0x538836,
 				side: THREE.DoubleSide,
 				normalMap: normalMap,
-				// normalScale: new THREE.Vector2(1, 1),
+				normalScale: new THREE.Vector2(6, 2),
 				// normalScale: new THREE.Vector2(0.1, 0.1),
 				metalness: 0.6,
 				roughness: 0.5,
@@ -228,44 +229,62 @@
 			const wireframe = false;
 			const side: THREE.Side = THREE.DoubleSide;
 
-			// const arcShape = new THREE.Shape();
-			// arcShape.moveTo(4, 0);
-			// arcShape.bezierCurveTo(5, 25, 5, 25, 0, 60);
-			// arcShape.bezierCurveTo(-5, 25, -5, 25, -4, 0);
-			// const geometry = new THREE.ShapeGeometry(arcShape, 2);
-			// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-			// const mesh = new THREE.Mesh(geometry, material);
-			// scene.add(mesh);
+			const grassGeometry = new GrassGeometry({
+				points: [
+					new THREE.Vector3(-0.08, 0, 0),
+					new THREE.Vector3(-0.1, 1.3, -0.22),
+					new THREE.Vector3(0, 2.5, -0.6),
+				],
+			});
 
-			const grassGeometry = new GrassLodGeometry({
-				size: new THREE.Vector2(4, 4),
+			const grassLodGeometry = new GrassLodGeometry({
+				size: new THREE.Vector2(6, 6),
+				scaleY: { high: 2.5 },
 				bladeGrassCount: 40,
 			});
+
+			// ---
+			// const mesh = new THREE.Mesh(
+			// 	grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(4), 0.25),
+			// 	new THREE.MeshStandardMaterial({
+			// 		// color: 0x77ee37,
+			// 		emissive: 0x77ee37,
+			// 		color: 0x538836,
+			// 		normalMap: normalMap,
+			// 		metalness: 0.6,
+			// 		roughness: 0.5,
+			// 		// normalScale: new THREE.Vector2(20, 20),
+			// 		side: THREE.DoubleSide,
+			// 		wireframe: true,
+			// 	}),
+			// );
+			// scene.add(mesh);
+			// ---
 
 			const group = new GrassGroup({
 				groupPosition: new THREE.Vector3(0, 0, 0),
 				groupSize: new THREE.Vector2(200, 200),
 				groupGrid: new THREE.Vector2(3, 3),
-				chunkBladeGrassCount: 1000,
+				chunkBladeGrassCount: 600,
 				chunkLod: [
 					{
 						distance: 0,
-						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 6), 1),
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(4)),
 						material: grassMaterial,
 					},
 					{
-						distance: 15,
-						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 4), 1),
+						distance: 20,
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(3), 0.8),
 						material: grassMaterial,
 					},
 					{
-						distance: 25,
-						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 2), 2),
+						distance: 30,
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(2), 0.55),
 						material: grassMaterial,
 					},
 					{
-						distance: 35,
-						geometry: grassGeometry.getGeometry(new THREE.PlaneGeometry(0.1, 2.5, 1, 1), 4),
+						distance: 40,
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(1), 0.35),
 						material: grassMaterial,
 					},
 				],

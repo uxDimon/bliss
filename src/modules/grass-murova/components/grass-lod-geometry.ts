@@ -4,6 +4,10 @@ import * as THREE from "three";
 interface GrassLodGeometryParams {
 	size: THREE.Vector2;
 	bladeGrassCount: number;
+	scaleY?: {
+		low?: number;
+		high?: number;
+	};
 }
 
 export class GrassLodGeometry {
@@ -17,11 +21,12 @@ export class GrassLodGeometry {
 		const size = params.size.clone().divideScalar(2);
 
 		return Array.from({ length: params.bladeGrassCount }, () => {
-			const scaleY = THREE.MathUtils.randFloat(1, 2.2);
+			const scaleY = THREE.MathUtils.randFloat(params?.scaleY?.low ?? 1, params?.scaleY?.high ?? 2.2);
+
 			return new THREE.Matrix4().compose(
 				new THREE.Vector3(
 					THREE.MathUtils.randFloat(-size.x, size.y),
-					(2.5 * scaleY) / 2,
+					0,
 					THREE.MathUtils.randFloat(-size.x, size.y)
 				),
 				new THREE.Quaternion().setFromEuler(
@@ -36,10 +41,11 @@ export class GrassLodGeometry {
 		});
 	}
 
-	public getGeometry(geometry: THREE.BufferGeometry, step: number = 1) {
+	public getLodGeometry(geometry: THREE.BufferGeometry, step: number = 1) {
 		const geometryMerger = new GeometryMerger();
 
-		for (let index = 0; index < this._matrixes.length; index += step) {
+		const length = Math.min(this._matrixes.length, Math.max(this._matrixes.length * step, 2));
+		for (let index = 0; index < length; index++) {
 			geometryMerger.addGeometry(geometry, this._matrixes[index]!);
 		}
 
