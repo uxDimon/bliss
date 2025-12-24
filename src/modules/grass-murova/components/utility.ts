@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { SimplexNoise } from "three/examples/jsm/Addons.js";
 
 /**
  * Генерирует текстуру нормалей (normalMap) для цилиндрической поверхности.
@@ -67,4 +68,36 @@ export const generateCylinderNormalMap = (
 	texture.magFilter = texture.minFilter = THREE.LinearFilter; // Smooth интерполяция для нормалей
 
 	return texture;
+};
+
+export const createdGradientTexture = (colorStart: THREE.Color, colorEnd: THREE.Color, width: number = 256) => {
+	// 1. Параметры
+	const height = 1; // Для линейного градиента достаточно 1 пикселя в высоту
+	const size = width * height;
+	const data = new Uint8Array(4 * size); // RGBA (4 канала)
+	const tempColor = new THREE.Color();
+
+	// 2. Заполнение массива данными
+	for (let i = 0; i < size; i++) {
+		const stride = i * 4;
+		const t = i / (size - 1); // Коэффициент смешивания от 0 до 1
+
+		// Интерполяция цветов
+		tempColor.copy(colorStart).lerp(colorEnd, t);
+
+		data[stride] = tempColor.r * 255; // R
+		data[stride + 1] = tempColor.g * 255; // G
+		data[stride + 2] = tempColor.b * 255; // B
+		data[stride + 3] = 255; // A (непрозрачность)
+	}
+
+	// 3. Создание DataTexture
+	const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
+	texture.needsUpdate = true; // Обязательно для инициализации
+
+	return texture;
+};
+
+export const getYSimplex = (simplex: SimplexNoise, x: number, z: number) => {
+	return simplex.noise(x / 150, z / 150) * 15;
 };

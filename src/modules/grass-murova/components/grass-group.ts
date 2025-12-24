@@ -1,6 +1,8 @@
 import { GrassChunk, type GrassChunkParams } from "@/modules/grass-murova/components/grass-chunk";
+import { getYSimplex } from "@/modules/grass-murova/components/utility";
 import { FLAT_MATRIX_4_LENGTH, FLAT_VECTOR_3_LENGTH } from "@/utility/three/constants";
 import * as THREE from "three";
+import type { SimplexNoise } from "three/examples/jsm/Addons.js";
 
 interface GrassGroupParams {
 	groupPosition?: THREE.Vector3;
@@ -9,6 +11,8 @@ interface GrassGroupParams {
 
 	chunkBladeGrassCount: GrassChunkParams["bladeGrassCount"];
 	chunkLod: GrassChunkParams["lod"];
+
+	simplex: SimplexNoise;
 }
 
 const HELPER_COLOR = {
@@ -32,23 +36,38 @@ export class GrassGroup {
 	// instanced
 	private _createChunkList(params: GrassGroupParams) {
 		const chunkSize = params.groupSize.clone().divide(params.groupGrid.clone());
-		const { matrixArray, positionArray } = this._createInstancedArray(
-			chunkSize,
-			params.chunkBladeGrassCount ?? 1000
-		);
+		const chunkBladeGrassCount = params.chunkBladeGrassCount ?? 100;
+		const { matrixArray, positionArray } = this._createInstancedArray(chunkSize, chunkBladeGrassCount);
 		const chunkList: GrassChunk[] = [];
+
 		for (let y = 0; y < params.groupGrid.y; y++) {
 			for (let x = 0; x < params.groupGrid.x; x++) {
+				const positionArrayClone = positionArray.slice();
+				const matrixArrayClone = matrixArray.slice();
+				const chunkPosition = new THREE.Vector3(
+					chunkSize.x / 2 + chunkSize.x * x - params.groupSize.x / 2,
+					0,
+					chunkSize.y / 2 + chunkSize.y * y - params.groupSize.y / 2
+				);
+
+				// FIXME:
+				for (let index = 0; index < chunkBladeGrassCount; index++) {
+					positionArrayClone[index * FLAT_VECTOR_3_LENGTH + 1] = getYSimplex(
+						params.simplex,
+						positionArrayClone[index * FLAT_VECTOR_3_LENGTH]! + chunkPosition.x,
+						positionArrayClone[index * FLAT_VECTOR_3_LENGTH + 2]! + chunkPosition.z
+					);
+
+					matrixArrayClone[index * FLAT_MATRIX_4_LENGTH + 13] =
+						positionArrayClone[index * FLAT_VECTOR_3_LENGTH + 1]!;
+				}
+
 				const chunk = new GrassChunk({
 					groupPosition: params.groupPosition,
-					chunkPosition: new THREE.Vector3(
-						chunkSize.x / 2 + chunkSize.x * x - params.groupSize.x / 2,
-						0,
-						chunkSize.y / 2 + chunkSize.y * y - params.groupSize.y / 2
-					),
+					chunkPosition,
 					lod: params.chunkLod,
-					matrixArray: matrixArray.slice(),
-					positionArray: positionArray.slice(),
+					positionArray: positionArrayClone,
+					matrixArray: matrixArrayClone,
 				});
 
 				chunkList.push(chunk);

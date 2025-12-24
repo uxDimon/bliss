@@ -5,13 +5,17 @@
 	import { Timer } from "three";
 	import { DevOrbitControls } from "@/utility/three/devOrbitControls";
 	import { DevHelpers } from "@/utility/three/devHelper";
-	import { BufferGeometryUtils, HDRLoader, RoomEnvironment } from "three/examples/jsm/Addons.js";
+	import { HDRLoader, SimplexNoise } from "three/examples/jsm/Addons.js";
 	import Stats from "stats.js";
 	import vertexShader from "./shaders/grass-vertex.glsl";
 	import { GrassGroup } from "@/modules/grass-murova/components/grass-group";
 	import { GrassLodGeometry } from "@/modules/grass-murova/components/grass-lod-geometry";
 	import { GrassGeometry } from "@/modules/grass-murova/components/grass-geometry";
-	import { generateCylinderNormalMap } from "@/modules/grass-murova/components/utility";
+	import {
+		createdGradientTexture,
+		generateCylinderNormalMap,
+		getYSimplex,
+	} from "@/modules/grass-murova/components/utility";
 
 	let canvasWrapEl = $state<HTMLElementTagNameMap["div"]>();
 
@@ -29,7 +33,7 @@
 			pmremGenerator.compileEquirectangularShader();
 			new HDRLoader().load(new URL("./assets/lilienstein_1k.hdr", import.meta.url).href, (texture) => {
 				const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-				// scene.background = envMap;
+				scene.background = envMap;
 				scene.environment = envMap;
 				texture.dispose();
 				pmremGenerator.dispose();
@@ -63,15 +67,20 @@
 			normalMap.repeat.set(1, 2);
 			normalMap.center.set(0.5, 1);
 
+			const grassMaterialMap = createdGradientTexture(new THREE.Color(0x424b1e), new THREE.Color(0x7a9b4c));
+			grassMaterialMap.center.set(0.15, 1);
+			grassMaterialMap.repeat.set(1.3, 1);
+
 			type CustomUniforms = {
 				[uniform: string]: THREE.IUniform<any>;
 			};
 			let customUniforms: CustomUniforms | null = null;
 			const grassMaterial = new THREE.MeshStandardMaterial({
-				color: 0x538836,
+				// color: 0x7a9b4c,
+				map: grassMaterialMap,
 				side: THREE.DoubleSide,
 				normalMap: normalMap,
-				normalScale: new THREE.Vector2(2, 6),
+				normalScale: new THREE.Vector2(4, 10),
 				metalness: 0.6,
 				roughness: 0.5,
 			});
@@ -115,15 +124,15 @@
 			const grassGeometry = new GrassGeometry({
 				points: [
 					new THREE.Vector3(-0.08, 0, 0),
-					new THREE.Vector3(-0.1, 1.3, -0.22),
-					new THREE.Vector3(0, 2.5, -0.6),
+					new THREE.Vector3(-0.1, 1.9, -0.6),
+					new THREE.Vector3(0, 3.5, -1.2),
 				],
 			});
 
 			const grassLodGeometry = new GrassLodGeometry({
-				size: new THREE.Vector2(10, 10),
+				size: new THREE.Vector2(6, 6),
 				scaleY: { high: 2.5 },
-				bladeGrassCount: 60,
+				bladeGrassCount: 30,
 			});
 
 			// ---
@@ -144,11 +153,38 @@
 			// scene.add(mesh);
 			// ---
 
+			const simplex = new SimplexNoise();
+			const groundGeometry = new THREE.PlaneGeometry(200, 200, 20, 20);
+			groundGeometry.rotateX(-Math.PI / 2);
+			const positionAttribute = groundGeometry.getAttribute("position");
+
+			for (let i = 0; i < positionAttribute.count; i++) {
+				positionAttribute.setY(i, getYSimplex(simplex, positionAttribute.getX(i), positionAttribute.getZ(i)));
+			}
+			positionAttribute.needsUpdate = true; // Важно для обновления геометрии
+
+			const ground = new THREE.Mesh(
+				groundGeometry,
+				new THREE.MeshPhongMaterial({
+					// color: 0x77ee37,
+					emissive: 0x23280e,
+					color: 0x284219,
+					// normalMap: normalMap,
+					// normalScale: new THREE.Vector2(2, 6),
+					// metalness: 0,
+					// roughness: 1,
+					side: THREE.DoubleSide,
+					// wireframe: true,
+				}),
+			);
+			scene.add(ground);
+
 			const group = new GrassGroup({
 				groupPosition: new THREE.Vector3(0, 0, 0),
 				groupSize: new THREE.Vector2(200, 200),
 				groupGrid: new THREE.Vector2(2, 2),
-				chunkBladeGrassCount: 300,
+				chunkBladeGrassCount: 1600,
+				simplex,
 				chunkLod: [
 					{
 						distance: 0,
@@ -156,25 +192,25 @@
 						material: grassMaterial,
 					},
 					{
-						distance: 20,
-						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(3), 0.8),
+						distance: 25,
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(3), 0.75),
 						material: grassMaterial,
 					},
 					{
-						distance: 30,
-						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(2), 0.55),
+						distance: 45,
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(2), 0.45),
 						material: grassMaterial,
 					},
 					{
-						distance: 40,
-						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(1), 0.25),
+						distance: 60,
+						geometry: grassLodGeometry.getLodGeometry(grassGeometry.getGeometry(2), 0.25),
 						material: grassMaterial,
 					},
 				],
 			});
 
 			scene.add(group.group);
-			scene.add(...group.box3Helpers);
+			// scene.add(...group.box3Helpers);
 
 			if (devOrbitControls) {
 				devOrbitControls.addEventListener("change", () => {

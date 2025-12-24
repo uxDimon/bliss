@@ -46,7 +46,7 @@ float sideAmplitude = cos(sinAmplitude) * (windStrength * 0.3);  // Меньша
 vec3 perpDir = vec3(-normWindDir.z, 0.0, normWindDir.x);
 
 // Глобальные смещения (основное + боковое)
-vec3 worldOffset = instancePosition.y * (mainAmplitude * normWindDir + sideAmplitude * perpDir);
+vec3 worldOffset = position.y * (mainAmplitude * normWindDir + sideAmplitude * perpDir);
 
 // Преобразуем глобальное смещение в локальное (используя ротацию по Y)
 vec3 localOffset;

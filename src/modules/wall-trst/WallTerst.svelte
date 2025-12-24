@@ -22,10 +22,10 @@
 		return texture;
 	};
 
-	const texturesUrl = {
-		diff: new URL("./assets/wood_floor_deck_diff_1k.jpg", import.meta.url).href,
-		norGl: new URL("./assets/wood_floor_deck_nor_gl_1k.jpg", import.meta.url).href,
-	} as const;
+	// const texturesUrl = {
+	// 	diff: new URL("./assets/wood_floor_deck_diff_1k.jpg", import.meta.url).href,
+	// 	norGl: new URL("./assets/wood_floor_deck_nor_gl_1k.jpg", import.meta.url).href,
+	// } as const;
 
 	const textures = {
 		diff: createTexture(texturesUrl.diff),
