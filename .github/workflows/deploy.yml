@@ -1,4 +1,4 @@
-name: Deploy Vite Site
+name: Deploy Vite Site with pnpm
 
 on:
   push:
@@ -16,6 +16,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.24.0 # Можно указать конкретную версию или 'latest'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -23,7 +28,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build project
         run: pnpm run build
@@ -34,7 +39,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Vite по умолчанию собирает в папку 'dist'
           path: "./dist"
 
       - name: Deploy to GitHub Pages
