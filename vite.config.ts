@@ -8,6 +8,7 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+	base: "https://uxDimon.github.io/bliss/",
 	plugins: [svelte(), oxlintPlugin(), glsl()],
 	resolve: {
 		alias: {
