@@ -16,7 +16,7 @@ const HELPER_COLOR = {
 	INACTIVE: 0xc84369,
 } as const;
 
-export default class GrassGroup {
+export class GrassGroup {
 	private _group = new THREE.Group();
 	private _chunkList: GrassChunk[];
 
