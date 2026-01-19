@@ -24,8 +24,8 @@
 			var stats = new Stats();
 			canvasWrapEl.appendChild(stats.dom);
 			stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-			stats.dom.style.transform = "scale(2.5)";
-			stats.dom.style.transformOrigin = "top left";
+			// stats.dom.style.transform = "scale(2.5)";
+			// stats.dom.style.transformOrigin = "top left";
 
 			const { scene, camera, renderer } = createdTree(canvasWrapEl, 80);
 
@@ -41,7 +41,7 @@
 			renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
 			scene.background = new THREE.Color(0x283539);
-			camera.position.z = 5;
+			camera.position.set(66, 26, 66);
 
 			// renderer.shadowMap.enabled = true;
 
