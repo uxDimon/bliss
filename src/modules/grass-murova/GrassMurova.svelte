@@ -253,7 +253,12 @@
 </script>
 
 <div bind:this={canvasWrapEl} class="canvas-wrap">
-	<h2>bliss</h2>
+	<h2>
+		<a href="https://github.com/uxDimon/bliss">
+			<img src={import.meta.env.BASE_URL + "gitHub_Invertocat_White.svg"} alt="gitHub logo" />
+			bliss
+		</a>
+	</h2>
 </div>
 
 <style>
@@ -265,14 +270,23 @@
 
 	h2 {
 		position: absolute;
-		top: 20px;
-		right: 20px;
-		color: #dfdfdf;
-		text-shadow:
-			#000 1px 1px 1px,
-			#000 -1px 1px 1px,
-			#000 1px -1px 1px,
-			#000 -1px -1px 1px;
-		pointer-events: none;
+		top: 10px;
+		right: 10px;
+
+		& > a {
+			color: #ffffff;
+			text-decoration: none;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			--color-shadow: hsla(0, 0%, 0%, 0.3);
+			filter: drop-shadow(var(--color-shadow) 1px 1px 1px) drop-shadow(var(--color-shadow) -1px 1px 1px)
+				drop-shadow(var(--color-shadow) 1px -1px 1px) drop-shadow(var(--color-shadow) -1px -1px 1px);
+
+			& > img {
+				width: 20px;
+				height: 20px;
+			}
+		}
 	}
 </style>
